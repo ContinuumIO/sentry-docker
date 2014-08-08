@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+set -x
+
+# Use the SENTRY_CONFIG_URL env var to download and use your
+# sentry.conf file.
+SENTRY_CONFIG_URL=${SENTRY_CONFIG_URL:-}
+SENTRY_CONFIG_FILE="/opt/sentry.conf.py"
+
+# If you don't provide a value for the SENTRY_CONFIG_URL env
+# var, your install will default to our very basic sentry.conf file.
+if [ -z "${SENTRY_CONFIG_URL}" ]; then
+    SENTRY_CONFIG_URL="https://raw.githubusercontent.com/ContinuumIO/docker-sentry/master/conf/sentry.conf.py"
+fi
+
+SENTRY_DB_URL=${SENTRY_DB_URL:-}
+SENTRY_DB_FILE="/opt/data/sentry.db"
+mkdir -p /opt/data
+if [ -z "${SENTRY_DB_URL}" ]; then
+    SENTRY_DB_URL="https://raw.githubusercontent.com/ContinuumIO/docker-sentry/master/conf/sentry.db"
+fi
+
+wget $SENTRY_CONFIG_URL -O $SENTRY_CONFIG_FILE
+wget $SENTRY_DB_URL -O $SENTRY_DB_FILE
+
+# Fire up sentry!!
+exec /usr/local/bin/sentry --config=/opt/sentry.conf.py start

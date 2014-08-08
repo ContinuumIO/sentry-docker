@@ -5,7 +5,7 @@ CONF_ROOT = os.path.dirname(__file__)
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('ENGINE','django.db.backends.sqlite3'),  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.getenv('NAME','/data/sentry.db'),               # Or path to database file if using sqlite3.
+        'NAME': os.getenv('NAME','/opt//data/sentry.db'),               # Or path to database file if using sqlite3.
         'USER': os.getenv('USER', 'sentry'),                        # Not used with sqlite3.
         'PASSWORD': os.getenv('PASSWORD', 'sentry'),                    # Not used with sqlite3.
         'HOST': os.getenv('HOST', ''),                              # Set to empty string for localhost. Not used with sqlite3.

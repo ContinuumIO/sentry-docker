@@ -1,6 +1,6 @@
 FROM ubuntu
 
-RUN echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
+#RUN echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
 RUN apt-get update
 
 RUN apt-get install -y language-pack-en
@@ -12,12 +12,13 @@ RUN locale-gen en_US.UTF-8
 RUN dpkg-reconfigure locales
 
 RUN apt-get install -y \
-    openssh-server \
     libxml2-dev \
     python \
+    libc-dev \
     build-essential \
     make \
     gcc \
+    g++ \
     python-dev \
     wget
 
@@ -29,16 +30,22 @@ RUN python get-pip.py
 
 RUN pip install sentry
 
-RUN apt-get install -y postgresql-client-9.1 postgresql-client-common libpq5
+RUN apt-get install -y postgresql-client postgresql-client-common libpq5
 RUN apt-get install -y libpq-dev
 
 RUN pip install psycopg2
 
 EXPOSE 9000
-VOLUME ["/data"]
 
-ADD sentry.conf.py /sentry.conf.py
-ADD sentry.db /data/sentry.db
+# Create a data volume that can be mounted by other containers
+VOLUME ["/opt/data"]
 
-ENTRYPOINT ["/usr/local/bin/sentry", "--config=/sentry.conf.py"]
-CMD ["start"]
+# Copy build files to container root
+RUN mkdir /app
+ADD . /app
+
+#ADD sentry.conf.py /sentry.conf.py
+#ADD sentry.db /data/sentry.db
+
+# Start sentry with dynamic configuration
+ENTRYPOINT ["/app/bin/boot"]
