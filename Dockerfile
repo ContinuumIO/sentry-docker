@@ -35,6 +35,7 @@ RUN apt-get install -y libpq-dev
 
 RUN pip install psycopg2
 
+
 EXPOSE 9000
 
 # Create a data volume that can be mounted by other containers
@@ -44,8 +45,15 @@ VOLUME ["/opt/data"]
 RUN mkdir /app
 ADD . /app
 
-#ADD sentry.conf.py /sentry.conf.py
-#ADD sentry.db /data/sentry.db
+RUN mkdir -p /opt/data
+ADD conf/sentry.conf.py /opt/sentry.conf.py.default
+ADD conf/sentry.db /opt/data/sentry.db
+
+# Older versions of sentry don't allow you to specify config in configure()
+RUN mkdir -p /.sentry
+ADD conf/sentry.conf.py.root /.sentry/sentry.conf.py
+
+RUN /usr/bin/python /app/sentry_init.py
 
 # Start sentry with dynamic configuration
 ENTRYPOINT ["/app/bin/boot"]

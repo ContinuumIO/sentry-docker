@@ -1,21 +1,27 @@
 NAME = bkreider/docker-sentry
 VERSION = 0.1.0
 
-# Set the SENTR_CONFIG_URL  env var to your sentry.conf.py file.
-#SENTRY_CONFIG_URL ?= https://gist.github.com/pblittle/8778567/raw/logstash.conf
+# For Boot2Docker
+SENTRY_CONFIG_FILE=/home/docker/sentry.conf.py
+SENTRY_CONFIG_FILE_DEST=/opt/sentry.conf.py.mounted
 
 DIR := ${CURDIR}
 
 clean:
+	docker kill sentry &>/dev/null || /usr/bin/true
+	docker rm sentry &>/dev/null || /usr/bin/true
 	rm -f .build_test
 
 build:
 	docker build --rm -t $(NAME):$(VERSION) .
 
 run:
+	# Needed for Boot2docker, but will fail on real Docker machine
+	scp -i ~/.ssh/id_boot2docker -P 2022 sentry.conf.py docker@localhost:.
 	docker run -d \
 		-p 9000:9000 \
 		--name sentry \
+        -v ${SENTRY_CONFIG_FILE}:${SENTRY_CONFIG_FILE_DEST} \
 		$(NAME):$(VERSION)
 
 tag:
@@ -28,14 +34,14 @@ shell:
 	docker run -t -i --rm $(NAME):$(VERSION) bash
 
 build_test:
-	docker build --rm -t logstash_test test
+	docker build --rm -t sentry_test tests
 	touch .build_test
 
-test: run 
-	# Host shared volume isn't working properly??
-	# Embed the test script in the dockerfile
-	docker run -i --link logstash:logstash -v $(DIR)/test:/test -t logstash_test /bin/bash
+test:
+	# Try to run -- might be running already
+	docker run -d -p 9000:9000 --name sentry $(NAME):$(VERSION) || /usr/bin/true
+	docker run -i --link sentry:sentry -t sentry_test /bin/bash
 
 clean_test:
-	docker kill logstash
-	docker rm logstash
+	docker kill sentry
+	docker rm sentry
